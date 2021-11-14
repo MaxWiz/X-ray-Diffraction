@@ -1,8 +1,11 @@
 //Variables essential to reading and printing the txt file
 String filename="C:/Users/Max/Documents/GitHub/X-ray-Diffraction/Zn(2).txt";
+String expected = "C:/Users/Max/Documents/GitHub/X-ray-Diffraction/GeEx.txt";
 BufferedReader reader;
+BufferedReader reader2;
 String line;
 int lineNumber;
+int lineNumber2;
 
 float Ymax=0.1;    //maximum Y-coordinate value, adjusted as data is read
 float autoYscale=1.3; // variable for scaling the Y axis
@@ -11,6 +14,11 @@ float startP, stopP;  //scan range
 
 float[] Xdata=new float[50000];
 float[] Ydata=new float[50000];
+String[] ExpIndex = new String[100];
+float[] ExpN1 = new float[100];
+float[] ExpN2 = new float[100];
+float[] ExpN3 = new float[100];
+float[] OccuX = new float[2000];
 float scanDir=1.0;
 boolean newData=true;
 int dataN=0;
@@ -39,9 +47,11 @@ String shortName;
 
 void setup(){
   lineNumber=0;
+  lineNumber2=0;
   size(1300,800);  //sets the size of drawing window
   delay(1000);
   reader = createReader(filename);
+  reader2 = createReader(expected);
   try {
     line = reader.readLine();
   } catch (IOException e) {
@@ -66,12 +76,38 @@ void setup(){
     } catch (IOException e) {
       e.printStackTrace();
       line = null;
-      }
     }
-    if (startP > stopP) {
-      float t1 = startP;
-      startP = stopP;
-      stopP = t1;
+  }
+  if (startP > stopP) {
+    float t1 = startP;
+    startP = stopP;
+    stopP = t1;
+  }
+  try {
+    line = reader2.readLine();
+  } catch (IOException e) {
+    e.printStackTrace();
+    line = null;
+  }
+  while (line != null) {
+    String[] pieces = split(line, TAB);
+    ExpIndex[lineNumber2] = pieces[0];
+    if (pieces[2] != "") {
+      ExpN1[lineNumber2] = float(pieces[2]);
+    }
+    if (pieces[3] != "") {
+      ExpN2[lineNumber2] = float(pieces[3]);
+    }
+    if (pieces[4] != "") {
+      ExpN3[lineNumber2] = float(pieces[4]);
+    }
+    lineNumber2++;
+    try {
+      line = reader2.readLine();
+    } catch (IOException e) {
+      e.printStackTrace();
+      line = null;
+      }
     }
   noLoop();
 }
@@ -214,7 +250,6 @@ void printMaxima() {
   }
   println("Printing Maxima");
   for (int j=0; j<999; j+=2) {
-    float energy = 0.0;
     if (maxima[j+1]!=0.0) {
       X1=int(map(maxima[j], startP, stopP, 0, 1100));  //rescale to pixel numbers
       Y1=int(map(maxima[j+1], 0, Ymax, 0, 650)); 
@@ -227,7 +262,6 @@ void printMaxima() {
       strokeWeight(2);
       line(X1+100,690-Y1,X1+100,670-Y1);      //draw a vertical line
       //println(maxima[j] + "\t" + maxima[j+1]);
-      energy=(6.63*pow(10, -34)*3*pow(10, 8))/(maxima[j]*pow(10,-9)*1.6*pow(10,-19));
       //println("Energy: " + energy + "eV");
       fill(0);
       textSize(16);
@@ -250,7 +284,66 @@ void printMaxima() {
       }
     }
   }
-  println("Ymax: "+ Ymax);
+  //println("Printing Expected Maxima");
+  //for (int i = 0; i < 99; i++) {
+  //  if ((ExpN1[i] != 0) && (ExpN1[i] >= startP) && (ExpN1[i] <= stopP)) {
+  //    X1=int(map(ExpN1[i], startP, stopP, 0, 1100));  //rescale to pixel numbers
+  //    Y1=int(map(cutoff, 0, Ymax, 0, 650));
+  //    stroke(255, 0, 0);  //set the color
+  //    strokeWeight(2);
+  //    for (int j=2; j < 7; j++) {
+  //      line(X1+100,690-Y1+(40*j),X1+100,670-Y1+(40*j));
+  //    }
+  //    fill(255, 0, 0);
+  //    if (OccuX[X1+110]== 1) {
+  //      line(X1+100, 725, X1+100, 740);
+  //      text("(" + ExpIndex[i] + ")", X1+85, 760);
+  //    } else {
+  //      text("(" + ExpIndex[i] + ")", X1+85, 720);
+  //      for (int k=0; k < 40; k++) {
+  //        OccuX[X1+90+k]++;
+  //      }
+  //    }
+  //  }
+  //  if ((ExpN2[i] != 0) && (ExpN2[i] >= startP) && (ExpN1[i] <= stopP)) {
+  //    X1=int(map(ExpN2[i], startP, stopP, 0, 1100));  //rescale to pixel numbers
+  //    Y1=int(map(cutoff, 0, Ymax, 0, 650));
+  //    stroke(0, 255, 0);  //set the color
+  //    strokeWeight(3);
+  //    for (int j=3; j < 7; j++) {
+  //      line(X1+100,670-Y1+(40*j),X1+100,650-Y1+(40*j));
+  //    }
+  //    fill(0, 255, 0);
+  //    if (OccuX[X1+110]== 1) {
+  //      line(X1+100, 720, X1+100, 740);
+  //      text("(" + ExpIndex[i] + ")", X1+85, 760);
+  //    } else {
+  //      text("(" + ExpIndex[i] + ")", X1+85, 720);
+  //      for (int k=0; k < 40; k++) {
+  //        OccuX[X1+90+k]++;
+  //      }
+  //    }
+  //  }
+  //  if ((ExpN3[i] != 0) && (ExpN3[i] >= startP) && (ExpN1[i] <= stopP)) {
+  //    X1=int(map(ExpN3[i], startP, stopP, 0, 1100));  //rescale to pixel numbers
+  //    Y1=int(map(cutoff, 0, Ymax, 0, 650));
+  //    stroke(0, 0, 255);  //set the color
+  //    strokeWeight(4);
+  //    for (int j=3; j <7; j++) {
+  //      line(X1+100,680-Y1+(40*j),X1+100,660-Y1+(40*j));
+  //    }
+  //    fill(0, 0, 255);
+  //    if (OccuX[X1+110]== 1) {
+  //      line(X1+100, 720, X1+100, 740);
+  //      text("(" + ExpIndex[i] + ")", X1+85, 760);
+  //    } else {
+  //      text("(" + ExpIndex[i] + ")", X1+85, 720);
+  //      for (int k=0; k < 40; k++) {
+  //        OccuX[X1+90+k]++;
+  //      }
+  //    }
+  //  }
+  //}
   String filenameImage = filename.substring(0, filename.length()-4) + "_Maximums.png";
   String maxfilenameImage = filename.substring(0, 48) + "/Maximums/" + shortName.substring(0, shortName.length()-4) + ".png";
   println(maxfilenameImage);
